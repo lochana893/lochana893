@@ -12,20 +12,39 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;600;800&family=Noto+Sans+Sinhala:wght@700&display=swap">
-<!--
-  ==== ADS (Google AdSense "H5 Games Ads") ====
-  When your AdSense account is approved, remove the comment marks around the two
-  <script> tags below and put your own ca-pub-... number in data-ad-client.
-  Keep data-adbreak-test="on" while testing, then delete it to show real ads.
-  The game already calls adBreak() between runs and for the "Keep driving" reward.
-
-<script async data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-adbreak-test="on"
-  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js" crossorigin="anonymous"></script>
 <script>
-  window.adsbygoogle = window.adsbygoogle || [];
-  var adBreak = adConfig = function (o) { adsbygoogle.push(o); };
+  /* ========================  YOUR SETTINGS  ========================
+     Fill these in, save, and upload the file again. Nothing else to change.
+
+     adsenseClient : your AdSense publisher ID (AdSense > Account > Account information).
+                     It looks like "ca-pub-1234567890123456". Leave empty for no ads.
+     adsTestMode   : true shows Google's test ads, which earn nothing.
+                     Set it to false when you want real ads and real money.
+     supportUrl    : optional https:// link to your own payment or donation page.
+                     When set, the menu shows a "Support the game" button.
+  =================================================================== */
+  window.TUK_CONFIG = {
+    adsenseClient: '',
+    adsTestMode: true,
+    supportUrl: ''
+  };
+
+  // Loads Google's H5 Games Ads when a publisher ID is set above.
+  (function () {
+    var id = String(window.TUK_CONFIG.adsenseClient || '').trim();
+    if (!/^ca-pub-\d{10,20}$/.test(id)) return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + id;
+    s.crossOrigin = 'anonymous';
+    s.setAttribute('data-ad-client', id);
+    s.setAttribute('data-ad-frequency-hint', '30s');
+    if (window.TUK_CONFIG.adsTestMode !== false) s.setAttribute('data-adbreak-test', 'on');
+    document.head.appendChild(s);
+    window.adsbygoogle = window.adsbygoogle || [];
+    window.adBreak = window.adConfig = function (o) { window.adsbygoogle.push(o); };
+  })();
 </script>
--->
 <style>
 /* Layout: one portrait road column, edge to edge on a phone and centred on wider screens; a canvas road under a thin DOM HUD and full-screen menus */
 :root {
@@ -122,8 +141,32 @@ body {
     color-mix(in srgb, var(--night) 94%, transparent) 78%);
 }
 #over, #pause { justify-content: center; background: color-mix(in srgb, var(--night) 72%, transparent); }
-.top-row { position: absolute; top: 14px; right: max(16px, env(safe-area-inset-right, 0px)); }
-.brand { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 18px; }
+.top-row {
+  position: absolute; top: 14px;
+  left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; justify-content: space-between; align-items: center;
+}
+.sub-actions { display: flex; gap: 10px; width: 100%; }
+.btn.small { flex: 1 1 0; min-width: 0; font-size: 15px; padding: 10px 12px; text-decoration: none; }
+.reward-row { display: flex; gap: 10px; width: 100%; }
+.reward-row .btn { flex: 1 1 0; min-width: 0; font-size: 15px; padding: 12px 6px; }
+.earned { margin: -4px 0 0; display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: var(--cream); font-variant-numeric: tabular-nums; }
+.earned .coin-ic { width: 16px; height: 16px; }
+.wallet-line { margin: -6px 0 0; display: flex; align-items: center; gap: 6px; font-size: 15px; color: var(--muted); }
+.wallet-line b { color: var(--cream); font-size: 18px; font-variant-numeric: tabular-nums; }
+.skins { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
+.skin {
+  min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 8px 4px 10px; border: 0; border-radius: 12px; cursor: pointer; touch-action: manipulation;
+  background: color-mix(in srgb, var(--cream) 7%, transparent); color: var(--cream); font-family: var(--font-ui);
+}
+.skin canvas { width: 64px; height: 80px; }
+.skin.active { box-shadow: inset 0 0 0 2px var(--marigold); }
+.skin.locked canvas, .skin.locked .skin-name { opacity: .5; }
+.skin-name { font-size: 12px; font-weight: 600; line-height: 1.2; }
+.skin-price { font-size: 11px; font-weight: 800; color: var(--marigold); font-variant-numeric: tabular-nums; }
+.skin:focus-visible { outline: 3px solid var(--cream); outline-offset: 2px; }
+.brand { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 40px; }
 .title {
   margin: 0; font-family: var(--font-display); font-weight: 400;
   font-size: clamp(46px, 15vw, 70px); line-height: .9; letter-spacing: .01em;
@@ -201,6 +244,7 @@ body {
 
   <section id="start" class="screen">
     <div class="top-row">
+      <div class="pill" aria-label="Coins in your wallet"><i class="coin-ic"></i><span id="wallet-start">0</span></div>
       <button class="round-btn sound-btn" aria-label="Sound on" aria-pressed="true">
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7h3l4-4v14l-4-4H3z" style="fill:currentColor"/><path class="wave" d="M13 6.5c1.3 1 1.3 6 0 7M15.5 4.5c2.6 2 2.6 9 0 11" style="fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round"/><path class="cross" d="M13 7l5 6M18 7l-5 6" style="fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round"/></svg>
       </button>
@@ -229,7 +273,21 @@ body {
         </li>
       </ul>
       <button class="btn" id="btn-start">Start driving</button>
+      <div class="sub-actions">
+        <button class="btn ghost small" id="btn-garage">Garage</button>
+        <a class="btn ghost small" id="support-link" href="#" target="_blank" rel="noopener" hidden>Support the game</a>
+      </div>
       <p class="best-line">Best score <b id="best-start">0</b></p>
+    </div>
+  </section>
+
+  <section id="garage" class="screen" hidden>
+    <div class="panel">
+      <h2 class="paused-title">Garage</h2>
+      <p class="wallet-line"><i class="coin-ic"></i><b id="g-wallet">0</b> coins</p>
+      <div class="skins" id="garage-list"></div>
+      <p class="hint" id="garage-msg" aria-live="polite">Collect coins on the road to buy new paint.</p>
+      <button class="btn" id="btn-garage-back">Back</button>
     </div>
   </section>
 
@@ -255,8 +313,12 @@ body {
         <div><dt>Best</dt><dd id="o-best">0</dd></div>
       </dl>
       <p class="newbest" id="newbest" hidden>New best</p>
+      <p class="earned"><i class="coin-ic"></i><span id="o-earned">+0 coins saved</span></p>
       <div class="actions">
-        <button class="btn alt" id="btn-continue" hidden>Keep driving<small id="continue-note">One free continue</small></button>
+        <div class="reward-row" id="reward-row" hidden>
+          <button class="btn alt" id="btn-continue" hidden>Keep driving<small id="continue-note">One free continue</small></button>
+          <button class="btn alt" id="btn-double" hidden>Double coins<small id="double-note">+0 coins</small></button>
+        </div>
         <button class="btn" id="btn-again">Drive again</button>
         <button class="btn ghost" id="btn-menu">Menu</button>
       </div>
@@ -310,6 +372,16 @@ body {
     cream: tok('--cream', '#fff3dc')
   };
   const DISPLAY_FONT = '"Bungee", Impact, "Arial Black", sans-serif';
+  const CONFIG = window.TUK_CONFIG || {};
+  // Paint jobs bought with coins collected on the road (game coins only, not real money)
+  const SKINS = [
+    { id: 'red', name: 'Classic Red', price: 0, body: '#c41e3a', accent: '#ffb627' },
+    { id: 'green', name: 'Galle Green', price: 150, body: '#2f8a4e', accent: '#f4c430' },
+    { id: 'blue', name: 'Ocean Blue', price: 300, body: '#2559a7', accent: '#fff3dc' },
+    { id: 'yellow', name: 'Taxi Yellow', price: 500, body: '#e0b21b', accent: '#22242b' },
+    { id: 'purple', name: 'Royal Purple', price: 800, body: '#5b2b82', accent: '#ffb627' },
+    { id: 'black', name: 'Midnight Gold', price: 1200, body: '#22242b', accent: '#ffb627' }
+  ];
 
   /* ---------- sound (tiny synth, no files) ---------- */
   const Sfx = {
@@ -413,10 +485,15 @@ body {
     mode: 'menu', time: 0, speed: 0, crashSpeed: 0, meters: 0, coins: 0, scroll: 0,
     lane: 1, lf: 1, ty: 400, tilt: 0, shield: false, invuln: 0, continued: false,
     objs: [], parts: [], floaters: [], deco: [],
-    lastTop: 0, shake: 0, dieT: 0, cause: '', dustT: 0,
+    lastTop: 0, shake: 0, dieT: 0, cause: '', dustT: 0, doubled: false, banked: 0,
     palmL: 0, palmR: 0, nextPost: 100, nextZebra: 650, nextKm: 1000
   };
-  let best = 0;
+  let best = 0, wallet = 0, ownedSkins = ['red'], skin = SKINS[0], PLAYER = null;
+  function setSkin(id) {
+    skin = SKINS.find((s) => s.id === id && ownedSkins.includes(s.id)) || SKINS[0];
+    PLAYER = { body: skin.body, accent: skin.accent, dark: shade(skin.body, -0.3), light: shade(skin.body, 0.15) };
+    store.set('skin', skin.id);
+  }
 
   const CAR_COLORS = ['#ecebe6', '#a7b0ba', '#2d5fa6', '#22242b', '#8b2333', '#3e7f6b'];
   const TUK_COLORS = [['#2f8a4e', '#f4c430'], ['#2559a7', '#f2f2f2'], ['#e0b21b', '#2a2a2a'], ['#5b2b82', '#ffb627']];
@@ -598,6 +675,7 @@ body {
     S.deco = S.deco.filter((d) => d.kind === 'palm');
     S.speed = BASE_SPEED * 0.85; S.meters = 0; S.coins = 0; S.lane = 1; S.lf = 1; S.tilt = 0;
     S.shield = false; S.invuln = 0; S.continued = false; S.shake = 0; S.dustT = 0;
+    S.doubled = false; S.banked = 0;
     S.lastTop = -BASE_SPEED * 1.1;
     S.nextPost = 100; S.nextZebra = 650; S.nextKm = 1000;
   }
@@ -618,7 +696,7 @@ body {
     S.mode = 'dying'; S.dieT = 0.9; S.cause = o.type; S.crashSpeed = S.speed;
     S.shake = reduceMotion ? 0 : 14;
     const ox = laneX(o.lf);
-    burst((ox + laneX(S.lf)) / 2, S.ty + 10, [COL.tuk, COL.marigold, '#15161a', o.color || '#6b4a33', '#cfd3da'], 26);
+    burst((ox + laneX(S.lf)) / 2, S.ty + 10, [PLAYER.body, PLAYER.accent, '#15161a', o.color || '#6b4a33', '#cfd3da'], 26);
     Sfx.crash(); vibrate([60, 40, 120]);
   }
   function score() { return Math.floor(S.meters) + S.coins * 10; }
@@ -637,25 +715,105 @@ body {
     $('o-best').textContent = best;
     $('newbest').hidden = !isBest;
     $('best-start').textContent = best;
+    // save this run's coins into the wallet (only the ones not saved before a continue)
+    wallet += S.coins - S.banked; S.banked = S.coins; store.set('wallet', wallet);
+    updateEarned(); updateWalletLabels();
     showHud(false);
     showScreen('over');
-    prepareContinue();
+    prepareRewards();
     setTimeout(() => { if (S.mode === 'over') $('btn-again').focus({ preventScroll: true }); }, 50);
   }
-  let continueAction = null;
-  function prepareContinue() {
-    const btn = $('btn-continue'), note = $('continue-note');
-    btn.hidden = true; continueAction = null;
-    if (S.continued) return;
-    if (!Ads.ready) { note.textContent = 'One free continue'; continueAction = doContinue; btn.hidden = false; return; }
-    note.textContent = 'Watch a short ad';
-    Ads.reward('continue', {
-      available(showAd) { if (S.mode !== 'over') return; continueAction = showAd; btn.hidden = false; },
-      rewarded() { if (S.mode === 'over') doContinue(); },
-      unavailable() { btn.hidden = true; },
-      dismissed() { btn.hidden = true; }
+  /* One rewarded ad per offer, used by whichever button the player taps. */
+  let rewardShow = null, pendingReward = null;
+  function setRewardButtons(showContinue, showDouble) {
+    $('btn-continue').hidden = !showContinue;
+    $('btn-double').hidden = !showDouble;
+    $('reward-row').hidden = !showContinue && !showDouble;
+  }
+  function prepareRewards() {
+    setRewardButtons(false, false); rewardShow = null; pendingReward = null;
+    const canContinue = !S.continued, canDouble = S.coins > 0 && !S.doubled;
+    if (!canContinue && !canDouble) return;
+    if (!Ads.ready) {
+      $('continue-note').textContent = 'One free continue';
+      $('double-note').textContent = `+${S.coins} coins, free`;
+      rewardShow = grantReward;
+      setRewardButtons(canContinue, canDouble);
+      return;
+    }
+    $('continue-note').textContent = 'Watch a short ad';
+    $('double-note').textContent = `+${S.coins} coins, short ad`;
+    Ads.reward('game_over', {
+      available(showAd) { if (S.mode !== 'over') return; rewardShow = showAd; setRewardButtons(canContinue, canDouble); },
+      rewarded() { if (S.mode === 'over') grantReward(); },
+      unavailable() { setRewardButtons(false, false); },
+      dismissed() { pendingReward = null; setRewardButtons(false, false); }
     });
   }
+  function useReward(kind) {
+    if (!rewardShow || S.mode !== 'over') return;
+    pendingReward = kind;
+    const show = rewardShow; rewardShow = null;
+    setRewardButtons(false, false);
+    show();
+  }
+  function grantReward() {
+    const what = pendingReward; pendingReward = null;
+    if (what === 'continue') doContinue();
+    else if (what === 'double') doDouble();
+  }
+  function doDouble() {
+    S.doubled = true;
+    wallet += S.coins; store.set('wallet', wallet);
+    updateEarned(); updateWalletLabels();
+    Sfx.km();
+    prepareRewards();
+  }
+  function updateEarned() {
+    const got = S.coins * (S.doubled ? 2 : 1);
+    $('o-earned').textContent = `+${got} coins saved · ${wallet} in wallet`;
+  }
+  function updateWalletLabels() {
+    $('wallet-start').textContent = wallet;
+    $('g-wallet').textContent = wallet;
+  }
+
+  /* ---------- garage ---------- */
+  function renderGarage() {
+    updateWalletLabels();
+    const list = $('garage-list'), r = Math.min(window.devicePixelRatio || 1, 3);
+    list.textContent = '';
+    for (const sk of SKINS) {
+      const owned = ownedSkins.includes(sk.id), active = skin.id === sk.id;
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'skin' + (active ? ' active' : '') + (!owned && wallet < sk.price ? ' locked' : '');
+      const cv = document.createElement('canvas');
+      cv.width = 64 * r; cv.height = 80 * r;
+      const c = cv.getContext('2d'); c.scale(r, r);
+      drawTuk(c, 32, 8, sk.body, sk.accent, shade(sk.body, -0.3), shade(sk.body, 0.15), 0);
+      const nm = document.createElement('span'); nm.className = 'skin-name'; nm.textContent = sk.name;
+      const pr = document.createElement('span'); pr.className = 'skin-price';
+      pr.textContent = active ? 'Driving' : owned ? 'Owned' : `${sk.price} coins`;
+      b.setAttribute('aria-label', `${sk.name}, ${pr.textContent}`);
+      b.append(cv, nm, pr);
+      b.addEventListener('click', () => chooseSkin(sk));
+      list.append(b);
+    }
+  }
+  function chooseSkin(sk) {
+    const msg = $('garage-msg');
+    Sfx.unlock();
+    if (ownedSkins.includes(sk.id)) { setSkin(sk.id); msg.textContent = `${sk.name} is ready to drive.`; Sfx.lane(); }
+    else if (wallet >= sk.price) {
+      wallet -= sk.price; ownedSkins.push(sk.id);
+      store.set('wallet', wallet); store.set('owned', ownedSkins);
+      setSkin(sk.id); Sfx.shield();
+      msg.textContent = `You bought ${sk.name}.`;
+    } else msg.textContent = `You need ${sk.price - wallet} more coins for ${sk.name}.`;
+    renderGarage();
+  }
+  function openGarage() { $('garage-msg').textContent = 'Collect coins on the road to buy new paint.'; renderGarage(); showScreen('garage'); }
   function doContinue() {
     S.continued = true;
     S.objs.length = 0;
@@ -672,7 +830,7 @@ body {
   }
 
   /* ---------- UI ---------- */
-  const screens = { start: $('start'), pause: $('pause'), over: $('over') };
+  const screens = { start: $('start'), pause: $('pause'), over: $('over'), garage: $('garage') };
   function showScreen(name) { for (const n in screens) screens[n].hidden = n !== name; }
   function showHud(on) { $('hud').hidden = !on; $('speedo').hidden = !on; if (!on) $('shield-badge').hidden = true; }
   function syncSound() {
@@ -734,8 +892,11 @@ body {
   $('btn-resume').addEventListener('click', resume);
   $('btn-quit').addEventListener('click', toMenu);
   $('btn-menu').addEventListener('click', toMenu);
-  $('btn-again').addEventListener('click', () => { $('btn-continue').hidden = true; S.mode = 'menu'; Ads.next('drive_again', startRun); });
-  $('btn-continue').addEventListener('click', () => { if (continueAction) { const a = continueAction; continueAction = null; a(); } });
+  $('btn-again').addEventListener('click', () => { setRewardButtons(false, false); S.mode = 'menu'; Ads.next('drive_again', startRun); });
+  $('btn-continue').addEventListener('click', () => useReward('continue'));
+  $('btn-double').addEventListener('click', () => useReward('double'));
+  $('btn-garage').addEventListener('click', openGarage);
+  $('btn-garage-back').addEventListener('click', () => { showScreen('start'); $('btn-start').focus({ preventScroll: true }); });
   document.querySelectorAll('.sound-btn').forEach((b) => b.addEventListener('click', () => { Sfx.unlock(); Sfx.setMuted(!Sfx.muted); }));
 
   /* ---------- update ---------- */
@@ -1033,7 +1194,7 @@ body {
     }
     const blink = S.invuln > 0 && Math.sin(S.time * 32) > 0;
     c.globalAlpha = blink ? 0.35 : 1;
-    drawTuk(c, px, py, COL.tuk, COL.marigold, PLAYER_DARK, PLAYER_LIGHT, S.tilt);
+    drawTuk(c, px, py, PLAYER.body, PLAYER.accent, PLAYER.dark, PLAYER.light, S.tilt);
     c.globalAlpha = 1;
     drawParticles(c);
     for (const d of S.deco) if (d.kind === 'palm') drawPalm(c, d);
@@ -1055,8 +1216,6 @@ body {
       c.fillStyle = g; c.fillRect(0, 0, L.W, 96);
     }
   }
-  const PLAYER_DARK = shade(COL.tuk.length === 7 ? COL.tuk : '#c41e3a', -0.3);
-  const PLAYER_LIGHT = shade(COL.tuk.length === 7 ? COL.tuk : '#c41e3a', 0.15);
 
   /* ---------- loop ---------- */
   let last = performance.now();
@@ -1073,6 +1232,13 @@ body {
     data = data || {};
     best = Math.max(Number(store.get('best', 0)) || 0, Number(data.best) || 0);
     Sfx.muted = typeof data.muted === 'boolean' ? data.muted : !!store.get('muted', false);
+    wallet = Math.max(0, Math.floor(Number(store.get('wallet', data.wallet || 0)) || 0));
+    const owned = store.get('owned', data.owned || ['red']);
+    ownedSkins = Array.isArray(owned) ? Array.from(new Set(['red'].concat(owned.filter((id) => SKINS.some((s) => s.id === id))))) : ['red'];
+    setSkin(store.get('skin', data.skin || 'red'));
+    updateWalletLabels();
+    const support = String(CONFIG.supportUrl || '').trim();
+    if (/^https:\/\/\S+$/.test(support)) { $('support-link').href = support; $('support-link').hidden = false; }
     Ads.init();
     resize();
     S.ty = L.H * 0.45;
@@ -1083,7 +1249,7 @@ body {
     syncSound();
     showScreen('start');
     try { if (window.ResizeObserver) new ResizeObserver(() => resize()).observe(app); else window.addEventListener('resize', resize); } catch (e) { window.addEventListener('resize', resize); }
-    try { if (window.claude && window.claude.hot && window.claude.hot.snapshot) window.claude.hot.snapshot(() => ({ best, muted: Sfx.muted })); } catch (e) { /* not in a viewer */ }
+    try { if (window.claude && window.claude.hot && window.claude.hot.snapshot) window.claude.hot.snapshot(() => ({ best, muted: Sfx.muted, wallet, owned: ownedSkins, skin: skin.id })); } catch (e) { /* not in a viewer */ }
     requestAnimationFrame(frame);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => {});
   }
